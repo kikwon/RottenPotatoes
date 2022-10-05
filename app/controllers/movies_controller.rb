@@ -7,7 +7,30 @@ class MoviesController < ApplicationController
   end
 
   def index
-    @movies = Movie.all
+    #@movies = Movie.all
+    @all_ratings = Movie.all_ratings
+    @ratings_to_show = params[:ratings]
+    @sort_param = params[:sort]
+    @headerCSS = "hilite bg-warning"
+   
+   # If the parameters are nil, but the session is not. Set the Session Keys to the Params Keys
+   if params[:sort].nil? and params[:ratings].nil? and (not session[:sort].nil? or not session[:ratings].nil?)
+     redirect_to movies_path(:sort => session[:sort], :ratings => session[:ratings])
+   end
+     
+ 
+    # If ratings to show has a nill value, set it to all_ratings in the Movie Model
+    if @ratings_to_show.nil?
+      @ratings_to_show = @all_ratings.map{ |rating| [ rating, rating.upcase ] }.to_h
+    end
+    
+    # Get the Movies back from the Model with Sort/Ratings
+    @movies = Movie.order(@sort_param).with_ratings(@ratings_to_show.keys)
+     
+    # Store the Current Parameters into the Session Cookies
+    session[:sort] = @sort_param
+    session[:ratings] = @ratings_to_show
+
   end
 
   def new
